@@ -193,8 +193,8 @@ func (r *runner) Report(completed []simulator.CompletedMovement, ignored []simul
 			coloredReason = au.Red(i.Reason).String()
 		case simulator.OccursAfterHalt:
 			coloredReason = au.Magenta(i.Reason).String()
-		//case simulator.OccursSimultaneouslyWithAnotherMovement:
-		//	coloredReason = au.Cyan(i.Reason).String()
+		case simulator.OccursSimultaneouslyWithAnotherMovement:
+			coloredReason = au.Cyan(i.Reason).String()
 		case simulator.FromStockIsEmpty:
 			coloredReason = au.Brown(i.Reason).String()
 		}
