@@ -31,42 +31,55 @@ type RequestsProcessingStock interface {
 
 type requestsProcessingStock struct {
 	env                                simulator.Environment
-	delegate                           simulator.ThroughStock
 	replicaNumber                      int
 	requestsComplete                   simulator.SinkStock
 	requestsFailed                     *simulator.SinkStock
 	numRequestsSinceLast               int32
 	totalCPUCapacityMillisPerSecond    *float64
 	occupiedCPUCapacityMillisPerSecond *float64
+
+	// Internal process accounting.
+	processesActive simulator.ThroughStock
 }
 
 func (rps *requestsProcessingStock) Name() simulator.StockName {
-	name := fmt.Sprintf("%s [%d]", rps.delegate.Name(), rps.replicaNumber)
+	name := fmt.Sprintf("%s [%d]", rps.processesActive.Name(), rps.replicaNumber)
 	return simulator.StockName(name)
 }
 
 func (rps *requestsProcessingStock) KindStocked() simulator.EntityKind {
-	return rps.delegate.KindStocked()
+	return rps.processesActive.KindStocked()
 }
 
 func (rps *requestsProcessingStock) Count() uint64 {
-	return rps.delegate.Count()
+	return rps.processesActive.Count()
 }
 
 func (rps *requestsProcessingStock) EntitiesInStock() []*simulator.Entity {
-	return rps.delegate.EntitiesInStock()
+	return rps.processesActive.EntitiesInStock()
 }
 
 func (rps *requestsProcessingStock) Remove() simulator.Entity {
-	request := rps.delegate.Remove().(*requestEntity)
+	request := rps.processesActive.Remove().(*requestEntity)
 	*rps.occupiedCPUCapacityMillisPerSecond -= *request.utilizationForRequestMillisPerSecond
 	return request
 }
 
 func (rps *requestsProcessingStock) Add(entity simulator.Entity) error {
 	var totalTime time.Duration
-	rps.numRequestsSinceLast++
-	request := *entity.(*requestEntity)
+
+	// TODO: this isn't correct anymore because it's used for interrupts.
+	//rps.numRequestsSinceLast++
+
+	req, ok := entity.(*requestEntity)
+	if !ok {
+		return fmt.Errorf("requests processing stock only supports request entities. got %T", entity)
+	}
+	request := *req
+	now := rps.env.CurrentMovementTime()
+	if request.startTime == nil {
+		request.startTime = &now
+	}
 	isRequestSuccessful := true
 
 	rps.calculateCPUUtilizationForRequest(request, &totalTime, &isRequestSuccessful)
@@ -87,7 +100,8 @@ func (rps *requestsProcessingStock) Add(entity simulator.Entity) error {
 		))
 	}
 
-	return rps.delegate.Add(entity)
+	return rps.processesActive.Add(entity)
+
 }
 
 func (rps *requestsProcessingStock) calculateCPUUtilizationForRequest(request requestEntity, totalTime *time.Duration, isRequestSuccessful *bool) {
@@ -134,7 +148,7 @@ func NewRequestsProcessingStock(env simulator.Environment, replicaNumber int, re
 	requestFailed *simulator.SinkStock, totalCPUCapacityMillisPerSecond *float64, occupiedCPUCapacityMillisPerSecond *float64) RequestsProcessingStock {
 	return &requestsProcessingStock{
 		env:                                env,
-		delegate:                           simulator.NewThroughStock("RequestsProcessing", "Request"),
+		processesActive:                    simulator.NewThroughStock("RequestsProcessing", "Request"),
 		replicaNumber:                      replicaNumber,
 		requestsComplete:                   requestComplete,
 		requestsFailed:                     requestFailed,

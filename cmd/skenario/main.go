@@ -46,7 +46,7 @@ var (
 	startAt           = time.Unix(0, 0)
 	startRunning      = time.Now()
 	au                = aurora.NewAurora(true)
-	simDuration       = flag.Duration("duration", 10*time.Minute, "Duration of time to simulate.")
+	simDuration       = flag.Duration("duration", 1*time.Minute, "Duration of time to simulate.")
 	tickInterval      = flag.Duration("tickInterval", 2*time.Second, "Tick interval duration of the Autoscaler")
 	stableWindow      = flag.Duration("stableWindow", 60*time.Second, "Duration of stable window of the Autoscaler")
 	panicWindow       = flag.Duration("panicWindow", 6*time.Second, "Duration of panic window of the Autoscaler")
@@ -73,7 +73,7 @@ func main() {
 
 	cluster := model.NewCluster(r.Env(), r.ClusterConfig(), r.ReplicasConfig())
 	model.NewAutoscaler(r.Env(), startAt, cluster, r.AutoscalerConfig())
-	trafficSource := model.NewTrafficSource(r.Env(), cluster.RoutingStock(), model.RequestConfig{CPUTimeMillis: 500, IOTimeMillis: 500, Timeout: 1 * time.Second})
+	trafficSource := model.NewTrafficSource(r.Env(), cluster.RoutingStock(), model.RequestConfig{CPUTimeMillis: 200, IOTimeMillis: 200, Timeout: 1 * time.Second})
 
 	var traffic trafficpatterns.Pattern
 	switch *trafficPattern {
@@ -193,8 +193,8 @@ func (r *runner) Report(completed []simulator.CompletedMovement, ignored []simul
 			coloredReason = au.Red(i.Reason).String()
 		case simulator.OccursAfterHalt:
 			coloredReason = au.Magenta(i.Reason).String()
-		//case simulator.OccursSimultaneouslyWithAnotherMovement:
-		//	coloredReason = au.Cyan(i.Reason).String()
+		case simulator.OccursSimultaneouslyWithAnotherMovement:
+			coloredReason = au.Cyan(i.Reason).String()
 		case simulator.FromStockIsEmpty:
 			coloredReason = au.Brown(i.Reason).String()
 		}

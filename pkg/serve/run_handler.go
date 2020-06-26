@@ -123,7 +123,7 @@ func RunHandler(w http.ResponseWriter, r *http.Request) {
 	cluster := model.NewCluster(env, clusterConf, replicasConfig)
 
 	model.NewAutoscaler(env, startAt, cluster, kpaConf)
-	trafficSource := model.NewTrafficSource(env, cluster.RoutingStock(), requestConfig)
+	trafficSource := model.NewTrafficSource(env, cluster.RoutingStock())
 
 	var traffic trafficpatterns.Pattern
 	switch runReq.TrafficPattern {
