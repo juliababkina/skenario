@@ -95,7 +95,7 @@ metadata:
   name: hpa
   namespace: default
 spec:
-  maxReplicas: 10
+  maxReplicas: 1000
   metrics:
   - resource:
       name: cpu

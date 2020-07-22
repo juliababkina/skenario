@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"skenario/pkg/plugin"
 	"skenario/pkg/simulator"
 	"time"
 
@@ -90,6 +91,7 @@ type SkenarioRunRequest struct {
 var environmentSequence int32 = 0
 
 func RunHandler(w http.ResponseWriter, r *http.Request) {
+	plugin.Init()
 	w.Header().Set("Content-Type", "application/json")
 
 	runReq := &SkenarioRunRequest{}
@@ -176,6 +178,7 @@ func RunHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	log.Printf("Deleted autoscaler.")
+	plugin.Shutdown()
 }
 
 func cpuUtilizations(dbFileName string, scenarioRunId int64) []CPUUtilizationMetric {

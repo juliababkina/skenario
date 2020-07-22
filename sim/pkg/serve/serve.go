@@ -23,8 +23,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-
-	"skenario/pkg/plugin"
 )
 
 type SkenarioServer struct {
@@ -33,7 +31,6 @@ type SkenarioServer struct {
 }
 
 func (ss *SkenarioServer) Serve() {
-	plugin.Init()
 	router := chi.NewRouter()
 	router.Use(middleware.NoCache)
 	router.Use(middleware.DefaultCompress)
@@ -64,7 +61,6 @@ func (ss *SkenarioServer) Shutdown() {
 	}
 
 	log.Println("Shutting down autoscaler plugin")
-	plugin.Shutdown()
 
 	log.Println("Done.")
 }
