@@ -84,7 +84,9 @@ func (cm *clusterModel) RecordToAutoscaler(atTime *time.Time) {
 		r := (*e).(ReplicaEntity)
 		stats = append(stats, r.Stats()...)
 	}
-	err := cm.env.Plugin().Stat(stats)
+	//err := cm.env.Plugin().Stat(stats)
+	server := cm.env.PluginServer()
+	err := server.Stat("0", stats)
 	if err != nil {
 		panic(err)
 	}

@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/josephburnett/sk-plugin/pkg/skplug"
 	"github.com/josephburnett/sk-plugin/pkg/skplug/proto"
+	"skenario/pkg/pluginvpa/cmd"
 	"time"
 
 	"skenario/pkg/plugin"
@@ -66,9 +67,16 @@ func (fe *FakeEnvironment) AppendCPUUtilization(cpu *simulator.CPUUtilization) {
 	fe.TheCPUUtilizations = append(fe.TheCPUUtilizations, cpu)
 }
 
+func (env *FakeEnvironment) PluginServer() cmd.PluginServer {
+	return cmd.PluginServer{}
+}
+
+func (env *FakeEnvironment) SetPluginServer(pl cmd.PluginServer) {
+}
+
 func NewFakeEnvironment() *FakeEnvironment {
 	return &FakeEnvironment{
-		ThePlugin: NewFakePluginPartition(),
+		//ThePlugin: NewFakePluginPartition(),
 	}
 }
 

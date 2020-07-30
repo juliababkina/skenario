@@ -20,6 +20,7 @@ func Init() {
 	//log.SetOutput(ioutil.Discard)
 
 	// We're a host. Start by launching the plugin process.
+	os.Setenv("SKENARIO_PLUGIN", "/home/juliababkina/git/Julia_Repository/skenario/build/plugin-k8s-vpa")
 	client = plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: skplug.Handshake,
 		Plugins:         skplug.PluginMap,
@@ -54,7 +55,7 @@ func Shutdown() {
 type PluginPartition interface {
 	Event(time int64, typ proto.EventType, object skplug.Object) error
 	Stat(stat []*proto.Stat) error
-	Scale(time int64) (rec int32, err error)
+	Scale(time int64) (rec []*proto.RecommendedPodResources, err error)
 }
 
 type pluginPartition struct {
@@ -77,6 +78,6 @@ func (p *pluginPartition) Stat(stat []*proto.Stat) error {
 	return pluginServer.Stat(p.partition, stat)
 }
 
-func (p *pluginPartition) Scale(time int64) (rec int32, err error) {
-	return pluginServer.HorizontalRecommendation(p.partition, time)
+func (p *pluginPartition) Scale(time int64) (rec []*proto.RecommendedPodResources, err error) {
+	return pluginServer.VerticalRecommendation(p.partition, time)
 }

@@ -24,9 +24,6 @@ import (
 	"time"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
-	"github.com/josephburnett/sk-plugin/pkg/skplug"
-	"github.com/josephburnett/sk-plugin/pkg/skplug/proto"
-
 	"skenario/pkg/data"
 	"skenario/pkg/model"
 	"skenario/pkg/model/trafficpatterns"
@@ -171,7 +168,7 @@ func RunHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = env.Plugin().Event(startAt.UnixNano(), proto.EventType_DELETE, &skplug.Autoscaler{})
+	//err = env.Plugin().Event(startAt.UnixNano(), proto.EventType_DELETE, &skplug.Autoscaler{})
 	if err != nil {
 		panic(err)
 	}

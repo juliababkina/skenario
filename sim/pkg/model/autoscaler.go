@@ -23,6 +23,7 @@ import (
 
 	"github.com/josephburnett/sk-plugin/pkg/skplug"
 	"github.com/josephburnett/sk-plugin/pkg/skplug/proto"
+	"skenario/pkg/pluginvpa/cmd"
 )
 
 type AutoscalerConfig struct {
@@ -52,22 +53,27 @@ func (c *stubCluster) ListPods() ([]*skplug.Pod, error) {
 func NewAutoscaler(env simulator.Environment, startAt time.Time, cluster ClusterModel, config AutoscalerConfig) AutoscalerModel {
 
 	autoscalerEntity := simulator.NewEntity("Autoscaler", "Autoscaler")
-
-	err := env.Plugin().Event(startAt.UnixNano(), proto.EventType_CREATE, &skplug.Autoscaler{
-		// TODO: select type and plugin based on the scenario.
-		Type: "hpa.v2beta2.autoscaling.k8s.io",
-		Yaml: hpaYaml,
+	pluginServer := cmd.NewPluginServer()
+	//err := env.Plugin().Event(startAt.UnixNano(), proto.EventType_CREATE, &skplug.Autoscaler{
+	//	// TODO: select type and plugin based on the scenario.
+	//	Type: "vpa.v2beta2.autoscaling.k8s.io",
+	//	Yaml: vpaYaml,
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	env.SetPluginServer(*pluginServer)
+	pluginServer.Event("0", startAt.UnixNano(), proto.EventType_CREATE, &skplug.Autoscaler{
+		Type: "vpa.v2beta2.autoscaling.k8s.io",
+		Yaml: vpaYaml,
 	})
-	if err != nil {
-		panic(err)
-	}
 	log.Printf("Created autoscaler.")
 
 	// TODO: create initial replicas config.
 	// Create the first pod since HPA can't scale from zero.
 	cm := cluster.(*clusterModel)
 	rs := cm.replicaSource.(*replicaSource)
-	err = cm.replicasActive.Add(NewReplicaEntity(rs.env, &rs.failedSink))
+	err := cm.replicasActive.Add(NewReplicaEntity(rs.env, &rs.failedSink))
 	if err != nil {
 		panic(err)
 	}
@@ -113,3 +119,37 @@ spec:
     kind: Deployment
     name: deployment
 `
+
+const vpaYaml = `
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+name: my-app-vpa
+spec:
+targetRef:
+apiVersion: "apps/v1"
+kind:       Deployment
+name:       my-app
+updatePolicy:
+updateMode: "Auto"
+`
+
+//const vpaYaml = `
+//apiVersion: "autoscaling.k8s.io/v1beta2"
+//kind: VerticalPodAutoscaler
+//metadata:
+//name: hamster-vpa
+//spec:
+//targetRef:
+//apiVersion: "apps/v1"
+//kind: Deployment
+//name: hamster
+//resourcePolicy:
+//containerPolicies:
+//- containerName: '*'
+//minAllowed:
+//cpu: 20
+//maxAllowed:
+//cpu: 50
+//controlledResources: ["cpu"]
+//`

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"skenario/pkg/plugin"
+	"skenario/pkg/pluginvpa/cmd"
 )
 
 const (
@@ -38,6 +39,8 @@ type Environment interface {
 	Context() context.Context
 	CPUUtilizations() []*CPUUtilization
 	AppendCPUUtilization(cpuUtilization *CPUUtilization)
+	PluginServer() cmd.PluginServer
+	SetPluginServer(pl cmd.PluginServer)
 }
 
 type CompletedMovement struct {
@@ -72,12 +75,19 @@ type environment struct {
 	completed       []CompletedMovement
 	ignored         []IgnoredMovement
 	cpuUtilizations []*CPUUtilization
+	pluginServer    cmd.PluginServer
 }
 
 func (env *environment) Plugin() plugin.PluginPartition {
 	return env.plugin
 }
 
+func (env *environment) PluginServer() cmd.PluginServer {
+	return env.pluginServer
+}
+func (env *environment) SetPluginServer(pl cmd.PluginServer) {
+	env.pluginServer = pl
+}
 func (env *environment) AddToSchedule(movement Movement) (added bool) {
 	occursAfterCurrent := movement.OccursAt().After(env.current)
 	occursBeforeHalt := movement.OccursAt().Before(env.haltAt)

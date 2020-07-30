@@ -51,16 +51,24 @@ var replicaNum int
 
 func (re *replicaEntity) Activate() {
 	now := re.env.CurrentMovementTime().UnixNano()
-	err := re.env.Plugin().Event(now, proto.EventType_CREATE, &skplug.Pod{
+	//err := re.env.Plugin().Event(now, proto.EventType_CREATE, &skplug.Pod{
+	//	Name: string(re.Name()),
+	//	// TODO: enumerate states in proto.
+	//	State:          "active",
+	//	LastTransition: now,
+	//	CpuRequest:     int32(re.GetCPUCapacity()),
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
+	server := re.env.PluginServer()
+	server.Event("0", now, proto.EventType_CREATE, &skplug.Pod{
 		Name: string(re.Name()),
 		// TODO: enumerate states in proto.
 		State:          "active",
 		LastTransition: now,
 		CpuRequest:     int32(re.GetCPUCapacity()),
 	})
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (re *replicaEntity) Deactivate() {
