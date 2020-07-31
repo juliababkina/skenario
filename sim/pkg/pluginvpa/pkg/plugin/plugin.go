@@ -11,7 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned/fake"
 	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/recommender/checkpoint"
@@ -69,9 +68,6 @@ type Autoscaler struct {
 }
 
 var checkpointsGCInterval = flag.Duration("checkpoints-gc-interval", 3*time.Second, `How often orphaned checkpoints should be garbage collected`)
-
-//var KubeApiQps = flag.Float64("kube-api-qps", 5.0, `QPS limit when making requests to Kubernetes apiserver`)
-//var KubeApiBurst = flag.Float64("kube-api-burst", 10.0, `QPS burst limit when making requests to Kubernetes apiserver`)
 
 // Create a non-concurrent, non-cached informer for simulation.
 
@@ -194,7 +190,8 @@ func NewAutoscaler(vpaYaml string) (*Autoscaler, error) {
 	//	return nil, err
 	//}
 	//vpav11 := vpaRaw.(*vpav1.VerticalPodAutoscaler)
-
+	//vpa.Name = "my-vpa"
+	//vpa.Namespace = "my-vpa"
 	autoscaler.vpa = vpa
 	autoscaler.pods = make(map[string]*proto.Pod)
 	autoscaler.stats = make(map[string]*proto.Stat)
@@ -281,7 +278,7 @@ func NewAutoscaler(vpaYaml string) (*Autoscaler, error) {
 	metricsClient := metrics.NewMetricsClient(&fakemetricsv1beta1.FakeMetricsV1beta1{Fake: &fakeMetricsGetter.Fake})
 	clusterState := model.NewClusterState()
 	clusterState.AddOrUpdateVpa(autoscaler.vpa, labels.NewSelector())
-	clusterState.ObservedVpas = append(clusterState.ObservedVpas, autoscaler.vpa)
+	//clusterState.ObservedVpas = append(clusterState.ObservedVpas, autoscaler.vpa)
 
 	autoscaler.recommender = routines.RecommenderFactory{
 		ClusterState:       clusterState,
@@ -339,6 +336,7 @@ func (a *Autoscaler) VerticalRecommendation(now int64) ([]*proto.RecommendedPodR
 	defer a.mux.Unlock()
 	a.recommender.RunOnce(time.Unix(0, now))
 	recommendation := make([]*proto.RecommendedPodResources, 0)
+	//a.vpa.Status.Recommendation always nill despite the fact that a.recommender.GetClusterState().Vpas has a recommendation which we need
 	if a.vpa.Status.Recommendation == nil {
 		return recommendation, nil
 	}
@@ -396,21 +394,6 @@ func (a *Autoscaler) DeletePod(pod *proto.Pod) error {
 
 func (a *Autoscaler) String() string {
 	return fmt.Sprintf("+%v", a.vpa)
-}
-
-//TODO not clear yet do we need it or not
-func unsafeConvertToVersionVia(obj runtime.Object, externalVersion schema.GroupVersion) (runtime.Object, error) {
-	objInt, err := legacyscheme.Scheme.UnsafeConvertToVersion(obj, schema.GroupVersion{Group: externalVersion.Group, Version: runtime.APIVersionInternal})
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert the given object to the internal version: %v", err)
-	}
-
-	objExt, err := legacyscheme.Scheme.UnsafeConvertToVersion(objInt, externalVersion)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert the given object back to the external version: %v", err)
-	}
-
-	return objExt, err
 }
 
 func (a *Autoscaler) listPods() ([]*v1.Pod, error) {
@@ -533,34 +516,3 @@ func NewClusterStateFeeder(config *rest.Config, clusterState *model.ClusterState
 		ControllerFetcher: controllerFetcher,
 	}.Make()
 }
-
-type fakeVpaTargetSelectorFetcher struct {
-}
-
-func (f *fakeVpaTargetSelectorFetcher) Fetch(vpa *vpav1.VerticalPodAutoscaler) (labels.Selector, error) {
-	return nil, nil
-}
-
-//func NewSimpleClientset(objects ...runtime.Object) *fake.Clientset {
-//	o := testing.NewObjectTracker(scheme, codecs.UniversalDecoder())
-//	for _, obj := range objects {
-//		if err := o.Add(obj); err != nil {
-//			panic(err)
-//		}
-//	}
-//
-//	cs := &fake.Clientset{tracker: o}
-//	cs.discovery = &fakediscovery.FakeDiscovery{Fake: &cs.Fake}
-//	cs.AddReactor("*", "*", testing.ObjectReaction(o))
-//	cs.AddWatchReactor("*", func(action testing.Action) (handled bool, ret watch.Interface, err error) {
-//		gvr := action.GetResource()
-//		ns := action.GetNamespace()
-//		watch, err := o.Watch(gvr, ns)
-//		if err != nil {
-//			return false, nil, err
-//		}
-//		return true, watch, nil
-//	})
-//
-//	return cs
-//}

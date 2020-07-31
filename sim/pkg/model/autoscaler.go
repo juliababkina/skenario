@@ -135,21 +135,15 @@ updateMode: "Auto"
 `
 
 //const vpaYaml = `
-//apiVersion: "autoscaling.k8s.io/v1beta2"
+//apiVersion: autoscaling.k8s.io/v1
 //kind: VerticalPodAutoscaler
 //metadata:
-//name: hamster-vpa
+//name: my-app-vpa
 //spec:
 //targetRef:
 //apiVersion: "apps/v1"
-//kind: Deployment
-//name: hamster
-//resourcePolicy:
-//containerPolicies:
-//- containerName: '*'
-//minAllowed:
-//cpu: 20
-//maxAllowed:
-//cpu: 50
-//controlledResources: ["cpu"]
+//kind:       Deployment
+//name:       my-app
+//updatePolicy:
+//updateMode: "Auto"
 //`
