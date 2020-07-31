@@ -11,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/json"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/client/clientset/versioned/fake"
 	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/recommender/checkpoint"
@@ -23,6 +24,10 @@ import (
 	"k8s.io/autoscaler/vertical-pod-autoscaler/pkg/target"
 	"k8s.io/client-go/informers"
 	coreinformers "k8s.io/client-go/informers/core/v1"
+	//kube_client "k8s.io/client-go/kubernetes"
+
+	//kube_client "k8s.io/client-go/kubernetes"
+
 	kube_client_fake "k8s.io/client-go/kubernetes/fake"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/kubernetes/pkg/controller"
@@ -199,6 +204,11 @@ func NewAutoscaler(vpaYaml string) (*Autoscaler, error) {
 	client.AddReactor("update", "verticalpodautoscalers", func(action core.Action) (handled bool, ret runtime.Object, err error) {
 		// log.Printf("update horizontalpodautoscaler")
 		autoscaler.vpa = action.(core.UpdateAction).GetObject().(*vpav1.VerticalPodAutoscaler)
+		return true, nil, nil
+	})
+	client.AddReactor("patch", "verticalpodautoscalers", func(action core.Action) (handled bool, ret runtime.Object, err error) {
+		patch := action.(core.PatchAction).GetPatch()
+		json.Unmarshal(patch, autoscaler.vpa)
 		return true, nil, nil
 	})
 	client.AddReactor("list", "pods", func(action core.Action) (handled bool, ret runtime.Object, err error) {
@@ -444,25 +454,27 @@ func (a *Autoscaler) listPods() ([]*v1.Pod, error) {
 
 func NewClusterStateFeeder(config *rest.Config, clusterState *model.ClusterState, memorySave bool, metricsClient metrics.MetricsClient, autoscaler *Autoscaler, vpav11 *vpav1.VerticalPodAutoscaler) input.ClusterStateFeeder {
 	//kubeClient := kube_client.NewForConfigOrDie(config)
-	kubeClient := &kube_client_fake.Clientset{}
+	//kubeClient := &kube_client_fake.Clientset{}
+	kubeClient := kube_client_fake.NewSimpleClientset()
+	//kubeClient := fake.NewSimpleClientset(&vpav1.VerticalPodAutoscalerList{Items: []vpav1.VerticalPodAutoscaler{*autoscaler.vpa}})
 
 	kubeClient.AddReactor("update", "verticalpodautoscalers", func(action core.Action) (handled bool, ret runtime.Object, err error) {
 		// log.Printf("update horizontalpodautoscaler")
 		autoscaler.vpa = action.(core.UpdateAction).GetObject().(*vpav1.VerticalPodAutoscaler)
 		return true, nil, nil
 	})
-	kubeClient.AddReactor("list", "pods", func(action core.Action) (handled bool, ret runtime.Object, err error) {
-		log.Printf("list pods")
-		pods, err := autoscaler.listPods()
-		if err != nil {
-			return false, nil, err
-		}
-		obj := &v1.PodList{}
-		for _, pod := range pods {
-			obj.Items = append(obj.Items, *pod)
-		}
-		return true, obj, nil
-	})
+	//kubeClient.AddReactor("list", "pods", func(action core.Action) (handled bool, ret runtime.Object, err error) {
+	//	log.Printf("list pods")
+	//	pods, err := autoscaler.listPods()
+	//	if err != nil {
+	//		return false, nil, err
+	//	}
+	//	obj := &v1.PodList{}
+	//	for _, pod := range pods {
+	//		obj.Items = append(obj.Items, *pod)
+	//	}
+	//	return true, obj, nil
+	//})
 
 	podLister, oomObserver := &fakePodLister{
 		autoscaler: autoscaler,
