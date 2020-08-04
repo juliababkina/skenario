@@ -202,11 +202,12 @@ func NewAutoscaler(vpaYaml string) (*Autoscaler, error) {
 	autoscaler.stats = make(map[string]*proto.Stat)
 
 	client.AddReactor("update", "verticalpodautoscalers", func(action core.Action) (handled bool, ret runtime.Object, err error) {
-		// log.Printf("update horizontalpodautoscaler")
+		log.Printf("update verticalpodautoscalers")
 		autoscaler.vpa = action.(core.UpdateAction).GetObject().(*vpav1.VerticalPodAutoscaler)
 		return true, nil, nil
 	})
 	client.AddReactor("patch", "verticalpodautoscalers", func(action core.Action) (handled bool, ret runtime.Object, err error) {
+		log.Printf("patch verticalpodautoscalers")
 		patch := action.(core.PatchAction).GetPatch()
 		json.Unmarshal(patch, autoscaler.vpa)
 		return true, nil, nil
