@@ -48,7 +48,7 @@
 
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
-                    <label class="label" for="runFor">Run For (seconds)</label>
+                    <label class="label" for="runFor">Simulation Duration (seconds)</label>
                 </div>
                 <div class="control">
                     <input type="number" style="width: 5em" id="runFor" value="180" min="1"/>
@@ -64,7 +64,7 @@
             </div>
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
-                    <label class="label" for="launchDelay">Replica Launch Delay (seconds)</label>
+                    <label class="label" for="launchDelay">Pod Launch Delay (seconds)</label>
                 </div>
                 <div class="control">
                     <input type="number" style="width: 5em" id="launchDelay" value="5" min="0.01" step="0.1"/>
@@ -72,7 +72,7 @@
             </div>
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
-                    <label class="label" for="terminateDelay">Replica Terminate Delay (seconds)</label>
+                    <label class="label" for="terminateDelay">Pod Terminate Delay (seconds)</label>
                 </div>
                 <div class="control">
                     <input type="number" style="width: 5em" id="terminateDelay" value="1" min="0.01" step="0.1"/>
@@ -80,13 +80,48 @@
             </div>
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
-                    <label class="label" for="tickInterval">Tick Interval (seconds)</label>
+                    <label class="label" for="tickInterval">Resync Period (seconds)</label>
                 </div>
                 <div class="control">
-                    <input type="number" style="width: 5em" id="tickInterval" value="5" min="1" step="1"/>
+                    <input type="number" style="width: 5em" id="tickInterval" value="15" min="1" step="1"/>
                 </div>
             </div>
 
+            <hr>
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label" for="hpa">HPA</label>
+                </div>
+                <div class="control">
+                    <input type="checkbox" name="hpa" onclick="showObject('hpaObject', 'hpa')" style="width: 5em" id="hpa" checked/>
+                </div>
+            </div>
+            <div id="hpaObject" class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label" for="hpaYaml">HPA Object (YAML)</label>
+                </div>
+                <div class="control">
+                    <textarea style="width: 15em; height: 30em" id="hpaYaml" min="1" step="1"></textarea>
+                </div>
+            </div>
+            <hr>
+
+            <div class="field is-horizontal ">
+                <div class="field-label is-normal">
+                    <label class="label" for="vpa">VPA</label>
+                </div>
+                <div class="control">
+                    <input type="checkbox" name="vpa" onclick="showObject('vpaObject', 'vpa')" style="width: 5em" id="vpa" checked/>
+                </div>
+            </div>
+            <div id="vpaObject" class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label" for="vpaYaml">VPA Object (YAML)</label>
+                </div>
+                <div class="control">
+                    <textarea style="width: 15em; height: 30em" id="vpaYaml" min="1" step="1"></textarea>
+                </div>
+            </div>
             <hr>
             <div class="field is-horizontal">
                 <div class="field-label is-normal">
@@ -207,6 +242,17 @@
 </div>
 
 <script>
+    function showObject (box, boxname) {
+        var chboxs = document.getElementsByName(boxname);
+        var vis = "none";
+        for(var i=0;i<chboxs.length;i++) {
+            if(chboxs[i].checked){
+                vis = "block";
+                break;
+            }
+        }
+        document.getElementById(box).style.display = vis;
+    }
     const trafficSelector = document.getElementById("select-traffic-pattern");
 
     trafficSelector.onchange = setTrafficPattern;
