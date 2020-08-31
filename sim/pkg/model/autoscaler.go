@@ -92,5 +92,17 @@ func NewAutoscaler(env simulator.Environment, startAt time.Time, cluster Cluster
 		}
 	}
 
+	cpuUtilizationEntity := simulator.NewEntity("Cpu utilization", "Cpu utilization")
+	cpuTicktock := NewCpuUtilizationTicktockStock(env, cpuUtilizationEntity, &cm.replicasActive)
+	for theTime := startAt.Add(1 * time.Nanosecond); theTime.Before(env.HaltTime()); theTime = theTime.Add(2 * time.Second) {
+		as.env.AddToSchedule(simulator.NewMovement(
+			"cpu_utilization_tick",
+			theTime,
+			cpuTicktock,
+			cpuTicktock,
+			&cpuUtilizationEntity,
+		))
+	}
+
 	return as
 }

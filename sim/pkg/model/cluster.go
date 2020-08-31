@@ -36,7 +36,7 @@ type ClusterModel interface {
 	CurrentActive() uint64
 	RecordToAutoscaler(atTime *time.Time)
 	RoutingStock() RequestsRoutingStock
-	ActiveStock() simulator.ThroughStock
+	ActiveStock() ReplicasActiveStock
 }
 
 type clusterModel struct {
@@ -46,7 +46,7 @@ type clusterModel struct {
 	replicasDesired     ReplicasDesiredStock
 	replicaSource       ReplicaSource
 	replicasLaunching   simulator.ThroughStock
-	replicasActive      simulator.ThroughStock
+	replicasActive      ReplicasActiveStock
 	replicasTerminating ReplicasTerminatingStock
 	replicasTerminated  simulator.SinkStock
 	requestsInRouting   simulator.ThroughStock
@@ -89,7 +89,7 @@ func (cm *clusterModel) RoutingStock() RequestsRoutingStock {
 	return cm.requestsInRouting
 }
 
-func (cm *clusterModel) ActiveStock() simulator.ThroughStock {
+func (cm *clusterModel) ActiveStock() ReplicasActiveStock {
 	return cm.replicasActive
 }
 
